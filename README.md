@@ -1,5 +1,7 @@
 ## Flutter create
 
+You navigate to next page by swiping to the left. There are 2 'stages' fist is after 2 page and second one is after 3 page.
+
 For my flutter create project I decided to do something that no one has made in Flutter.
 First idea was making a 3D cube, it was shooting rainbow it was great but then I saw someone else
 already made game in Flutter using cubes, so I had to do something else.
