@@ -12,7 +12,7 @@ class MyApp extends StatefulWidget{
 }
 
 class MyAppState extends State<MyApp>{
-  double _x = 0, _w = 0, _shadow = 0, _scale = 1, _scaleDiff;
+  double _x = 0, _w = 0, _scale = 1, _scaleDiff;
   List<String> _s = <String>[];
   PageController _page;
 
@@ -33,8 +33,7 @@ class MyAppState extends State<MyApp>{
     final double _index = _page.hasClients ? _page.page ?? 0 : 0;
     setState((){
       _x = (_x - .01) % (pi * 2);
-      _shadow = max(.0, min(1.0, _index - 1));
-      _w = _index > 2.5 ? (_w + .02) % (pi * 2) : max(.0, _w - .02);
+      _w = _index > 2.5 ? (_w + .02) % (pi * 2) : max(.0, _w - .04);
     });
   }
 
@@ -47,7 +46,7 @@ class MyAppState extends State<MyApp>{
       onScaleUpdate: (ScaleUpdateDetails d) => _scale = d.scale * _scaleDiff,
       child: Stack(
         children: <Widget>[
-          CustomPaint(painter: TesseractPainter(_x, _w, _shadow, _scale), child: const SizedBox.expand()),
+          CustomPaint(painter: TesseractPainter(_x, _w, _page.hasClients ? _page.page ?? 0 : 0, _scale), child: const SizedBox.expand()),
           PageView(controller: _page, children: _s.map(_makeText).toList()),
           Container(
             alignment: const Alignment(0, .9),
@@ -85,22 +84,23 @@ class Tesseract{
   }
 
   final double _size, _maxShadow;
-  final Matrix4 _cRot = Matrix4.rotationX(pi * .2) * Matrix4.rotationY(-pi * .6) * Matrix4.rotationZ(pi * .2);
   final List<Vector4> _v = <Vector4>[];
 
   double _x = 0, _w = 0, _shadow = 0;
   Matrix4 _xwRot = Matrix4.identity();
+  Matrix4 _cRot = Matrix4.rotationX(pi * .2) * Matrix4.rotationZ(pi * .2);
 
-  void setValues(double x, double y, double s){
+  void setValues(double x, double y, double s, double cR){
     _x = x;
     _w = y;
     _shadow = s;
     _xwRot = Matrix4(cos(_x), -sin(_x), 0, 0, sin(_x), cos(_x), 0, 0, 0, 0, cos(_w), -sin(_w), 0, 0, sin(_w), cos(_w));
+    _cRot = Matrix4.rotationX(pi * .1) * Matrix4.rotationY(cR * -pi * .3 + -pi * .3) * Matrix4.rotationZ(pi * .2);
     _projectAll();
   }
 
   void _projectAll() => _v.forEach(_project);
-  Offset getOffset(int index) => Offset(_v[index].x, _v[index].z);
+  Offset getOffset(int i) => Offset(_v[i].x, _v[i].z);
 
   void _project(Vector4 v){
     final Vector4 _rotated = _xwRot * v;
@@ -112,14 +112,14 @@ class Tesseract{
 }
 
 class TesseractPainter extends CustomPainter{
-  TesseractPainter(this.x, this.w, this.shadow, this.scale);
+  TesseractPainter(this.x, this.w, this.page, this.scale);
 
-  final double x, w, shadow, scale;
+  final double x, w, page, scale;
   final Paint p = Paint()..strokeWidth = .4..color = Colors.white..strokeCap = StrokeCap.round;
 
   Tesseract _tess;
 
-  @override bool shouldRepaint(TesseractPainter oldDelegate) => x != oldDelegate.x || w != oldDelegate.w || shadow != oldDelegate.shadow;
+  @override bool shouldRepaint(TesseractPainter oldDelegate) => x != oldDelegate.x || w != oldDelegate.w || page != oldDelegate.page;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -127,7 +127,7 @@ class TesseractPainter extends CustomPainter{
       return;
 
     _tess ??= Tesseract(size.shortestSide * .2 * scale);
-    _tess..setValues(x, w, shadow);
+    _tess..setValues(x, w, (page - 1).clamp(0.0, 1.0), (page - 2).clamp(0.0, 1.0));
 
     canvas.translate(size.width / 2, size.height / 2);
     _cube(canvas, _tess, p, 8);
