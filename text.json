@@ -1,0 +1,10 @@
+{
+	"_" : [
+		"I wanted to build something unique and interesting without any external libraries",
+		"This is a cube.\nYou can pinch to zoom in and out.\nI wanted to show that Flutter is not just for 2D..",
+		"..or 3D.",
+		"This is a Tesseract or Hypercube in double rotation around x and w axis.",
+		" So in a nutshell this is 2D canvas that is drawing 3D shadow of a 4D object.",
+		"Well.. That's it. Thank you for your time!"
+	]
+}
