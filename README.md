@@ -12,10 +12,7 @@ With 'w' rotation and all.
 It's tesseract done in Flutter with CustomPainter and matrix multiplication
 
 ### About
-I'm using map function (From processing) to map values thought the app for mapping 
-values from 0.0 to 1.0 to any other range from 1 to oEnd
-
-And Start the app with dark theme and Scaffold
+Start the app with dark theme and Scaffold
 ```dart
 void main() => runApp(MaterialApp(theme: ThemeData.dark().copyWith(accentColor: Colors.white), home: Scaffold(body: MyApp())));
 ```
@@ -64,7 +61,7 @@ class Tesseract{
 
   final double _size;
   final double _maxDistance;
-  final Matrix4 _canvasRot = Matrix4.rotationX(pi * 0.2) * Matrix4.rotationY(-pi * 0.6) * Matrix4.rotationZ(pi * 0.2);
+  Matrix4 _cRot = Matrix4.rotationX(pi * .2) * Matrix4.rotationZ(pi * .2);
   final List<Vector4> _points = <Vector4>[];
 
   double _x = 0.0, _w = 0.0, _shadow = 0.0;
@@ -72,11 +69,12 @@ class Tesseract{
   
   /// Setting new values for tesseract for rotation x, rotation y or distance for stereographic projection.
   /// This will generate new _xwRot matrix that is used to rotate the box
-  void setValues(double x, double y, double s){
+  void setValues(double x, double y, double page){
     _x = x;
     _w = y;
-    _shadow = s;
+    _shadow = (page - 1).clamp(0.0, 1.0);
     _xwRot = Matrix4(cos(_x), -sin(_x), 0, 0, sin(_x), cos(_x), 0, 0, 0, 0, cos(_w), -sin(_w), 0, 0, sin(_w), cos(_w));
+    _cRot = Matrix4.rotationX(pi * .1) * Matrix4.rotationY((page - 2).clamp(0.0, 1.0) * -pi * .3 + -pi * .3) * Matrix4.rotationZ(pi * .2);
     _projectAll();
   }
 
@@ -94,12 +92,11 @@ class Tesseract{
   ///     _size / (_maxShadow - _rotated.w) 
   ///     
   void _project(Vector4 vector){
-    final Vector4 _rotated = _xwRot * vector;
-    final double _sgValue = ((_size / (_maxShadow - _rotated.w) - 1) / 1) * _shadow + 1;
+    final Vector4 _rotated = _xwRot * v;
+    final double _sgValue = (_size / (_maxShadow - _rotated.w) - 1) * _shadow + 1;
     final Matrix4 _sgProjection = Matrix4.diagonal3(Vector3.all(_sgValue));
     final Vector4 _pVector = _sgProjection * _rotated;
-    
-    _points[_points.indexOf(vector)] = _canvasRot * _pVector;
+    _v[_v.indexOf(v)] = _cRot * _pVector;
   }
 }
 ```
@@ -140,7 +137,7 @@ class MyAppState extends State<MyApp>{
     });
   }
 
-  /// Load from external file, convert to JSON, get values from JSON array '_' and mapp values to the List<String>
+  /// Load from external file, convert to JSON, get values from JSON array '_' and map values to the List<String>
   void _loadStrings() async => _s = List<dynamic>.of(json.decode(await DefaultAssetBundle.of(context).loadString('text.json'))['_']).map<String>((dynamic d) => d).toList();
 
   @override

@@ -90,12 +90,12 @@ class Tesseract{
   Matrix4 _xwRot = Matrix4.identity();
   Matrix4 _cRot = Matrix4.rotationX(pi * .2) * Matrix4.rotationZ(pi * .2);
 
-  void setValues(double x, double y, double s, double cR){
+  void setValues(double x, double y, double page){
     _x = x;
     _w = y;
-    _shadow = s;
+    _shadow = (page - 1).clamp(0.0, 1.0);
     _xwRot = Matrix4(cos(_x), -sin(_x), 0, 0, sin(_x), cos(_x), 0, 0, 0, 0, cos(_w), -sin(_w), 0, 0, sin(_w), cos(_w));
-    _cRot = Matrix4.rotationX(pi * .1) * Matrix4.rotationY(cR * -pi * .3 + -pi * .3) * Matrix4.rotationZ(pi * .2);
+    _cRot = Matrix4.rotationX(pi * .1) * Matrix4.rotationY((page - 2).clamp(0.0, 1.0) * -pi * .3 + -pi * .3) * Matrix4.rotationZ(pi * .2);
     _projectAll();
   }
 
@@ -127,7 +127,7 @@ class TesseractPainter extends CustomPainter{
       return;
 
     _tess ??= Tesseract(size.shortestSide * .2 * scale);
-    _tess..setValues(x, w, (page - 1).clamp(0.0, 1.0), (page - 2).clamp(0.0, 1.0));
+    _tess..setValues(x, w, page);
 
     canvas.translate(size.width / 2, size.height / 2);
     _cube(canvas, _tess, p, 8);
